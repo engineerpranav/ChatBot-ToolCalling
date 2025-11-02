@@ -93,7 +93,7 @@
 
       const generateReply = async (text) => {
         const useWebSearch = websearch.checked; // ✅ true if toggle is active
-        const res = await fetch("http://localhost:3000/chat", {
+        const res = await fetch("https://chatbot-toolcalling.onrender.com/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: text, webSearch: useWebSearch ,threadId:threadId}),
