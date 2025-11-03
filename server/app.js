@@ -7,7 +7,7 @@ const groq = new Groq({ apiKey: process.env.API_KEY });
 const tvly = tavily({ apiKey: process.env.tvly });
 const cache = new NodeCache({ stdTTL: 60 * 60 * 24 });
 
-export async function GenerateResponse(message, webSearchCheck,threadId) {
+export async function GenerateResponse(message, webSearchCheck, threadId) {
   const baseMessageArray = [
     // Set an optional system message. This sets the behavior of the
     // assistant and can be used to provide specific instructions for
@@ -81,8 +81,7 @@ Remember: Use webSearch for anything with words like "today", "now", "latest", "
     // Set a user message for the assistant to respond to.
   ];
 
-  
-  const messageArray=cache.get(threadId) ?? baseMessageArray;
+  const messageArray = cache.get(threadId) ?? baseMessageArray;
 
   messageArray.push({
     role: "user",
@@ -118,8 +117,7 @@ Remember: Use webSearch for anything with words like "today", "now", "latest", "
           }
         }
       } else if (message.content) {
-
-        cache.set(threadId,messageArray)
+        cache.set(threadId, messageArray);
 
         return message.content;
       } else {
@@ -127,6 +125,13 @@ Remember: Use webSearch for anything with words like "today", "now", "latest", "
       }
     } catch (error) {
       console.error("LLM call error:", error);
+
+      if (error.status === 429) {
+        const retryAfter = error.headers?.["retry-after"];
+        const waitMinutes = retryAfter ? Math.ceil(retryAfter / 60) : "a few";
+
+        return `I am currently experiencing high usage and have reached my daily limit. Please try again in ${waitMinutes} minutes. I apologize for the inconvenience.`;
+      }
 
       // If it's a tool call validation error, return without tools
       if (
